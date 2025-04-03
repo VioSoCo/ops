@@ -1,0 +1,86 @@
+local com = require('component')
+local size = { x = 48, z = 48, y = 32 }
+
+Holo = {}
+Holo.binds = {}
+Holo.clear = function()
+    for pos, holo in pairs(Holo.binds) do
+        holo.clear()
+    end
+end
+
+Holo.setScale = function(scale)
+    for pos, holo in pairs(Holo.binds) do
+        holo.setScale(scale)
+    end
+end
+
+Holo.setPaletteColor = function(index, color)
+    for pos, holo in pairs(Holo.binds) do
+        holo.setPaletteColor(index, color)
+    end
+end
+
+Holo.setTranslation = function(x, y, z)
+    for pos, holo in pairs(Holo.binds) do
+        holo.setTranslation(x, y, z)
+    end
+end
+
+Holo.setRotationSpeed = function(s, x, y, z)
+    for pos, holo in pairs(Holo.binds) do
+        holo.setRotationSpeed(s, x, y, z)
+    end
+end
+
+Holo.bind = function(pos, addr)
+    local px = math.floor(pos.x / size.x);
+    local py = math.floor(pos.y / size.y);
+    local pz = math.floor(pos.z / size.z);
+
+    Holo.binds[px..py..pz] = com.proxy(com.get(addr));
+    return Holo.binds[px..py..pz];
+end
+
+Holo.set = function(x, y, z, c)
+    local px = math.floor(x / (size.x + 1));
+    local py = math.floor(y / (size.y + 1));
+    local pz = math.floor(z / (size.z + 1));
+
+    local rx = x - px * size.x
+    local ry = y - py * size.y
+    local rz = size.z - (z - pz * size.z) + 1
+
+    if not (Holo.binds[px..py..pz].get(rx,ry,rz) == c) then
+        Holo.binds[px..py..pz].set(rx,ry,rz, c)
+    end
+end
+
+Holo.get = function(x, y, z)
+    local px = math.floor(x / (size.x + 1));
+    local py = math.floor(y / (size.y + 1));
+    local pz = math.floor(z / (size.z + 1));
+
+    local rx = x - px * size.x
+    local ry = y - py * size.y
+    local rz = size.z - (z - pz * size.z) + 1
+
+    return Holo.binds[px..py..pz].get(rx,ry,rz)
+end
+
+Holo.fill = function(x,z,y,h,index)
+    local px = math.floor(x / (size.x + 1));
+    local pz = math.floor(z / (size.z + 1));
+    local py = 0;
+
+    if y + h > size.y then
+        local lastStart = y;
+        for _y = size.y, y + h, size.y do
+            py = math.floor((_y - 1) / size.y);
+            Holo.binds[px..py..pz].fill(x - px * size.x, size.z + 1 - (z - pz * size.z), lastStart, _y - py * size.y, index)
+            lastStart = 0;
+        end
+    else
+        Holo.binds[px..py..pz].fill(x - px * size.x, size.z + 1 - (z - pz * size.z), y, h, index)
+    end
+end
